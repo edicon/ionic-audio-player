@@ -13,7 +13,11 @@ export const LOADSTART = 'LOADSTART';
 export const RESET = 'RESET';
 
 export function mediaStateReducer(state: any, action: MediaAction) {
+  let debug = true;
   let payload = action.payload;
+  if ( debug ) {
+    console.log('Redurcer: ', state, action );
+  }
   switch (action.type) {
     case CANPLAY:
       state = Object.assign({}, state);

@@ -7,7 +7,7 @@ import {CANPLAY, LOADEDMETADATA, PLAYING, TIMEUPDATE, LOADSTART, RESET} from '..
 import {Store} from '@ngrx/store';
 import {CloudProvider} from '../../providers/cloud/cloud';
 import {AuthService} from '../../providers/auth0/auth.service';
-import {pluck, filter, map, distinctUntilChanged} from 'rxjs/operators';
+import {pluck, filter, map, distinctUntilChanged, tap} from 'rxjs/operators';
 
 @Component({
   selector: 'page-home',
@@ -41,6 +41,8 @@ export class HomePage {
   loggedIn: Boolean;
   @ViewChild(Navbar) navBar: Navbar;
   @ViewChild(Content) content: Content;
+
+  debug: true;
 
   constructor(
     public navCtrl: NavController,
@@ -82,15 +84,28 @@ export class HomePage {
   }
 
   ionViewWillLoad() {
-    this.store.select('appState').subscribe((value: any) => {
-      this.state = value.media;
+    this.store
+      .select('appState')
+      .pipe (
+        tap( data => console.log('1', data))
+      )
+      .subscribe((value: any) => {
+        if( this.debug ) {
+          // console.log('11', value)
+        }
+        this.state = value.media;
     });
 
     // Resize the Content Screen so that Ionic is aware of footer
     this.store
       .select('appState')
-      .pipe(pluck('media', 'canplay'), filter(value => value === true))
+      .pipe(
+        // tap( data => console.log('2', data)),
+        pluck('media', 'canplay'),
+        filter(value => value === true)
+      )
       .subscribe(() => {
+        // console.log('22')
         this.displayFooter = 'active';
         this.content.resize();
       });
@@ -99,12 +114,14 @@ export class HomePage {
     this.store
       .select('appState')
       .pipe(
+        // tap( data => console.log('3', data)),
         pluck('media', 'timeSec'),
         filter(value => value !== undefined),
         map((value: any) => Number.parseInt(value)),
         distinctUntilChanged()
       )
       .subscribe((value: any) => {
+        // console.log('33', value)
         this.seekbar.setValue(value);
       });
   }
@@ -123,6 +140,8 @@ export class HomePage {
     this.resetState();
     this.audioProvider.playStream(url).subscribe(event => {
       const audioObj = event.target;
+
+      console.log('playStream: ', event )
 
       switch (event.type) {
         case 'canplay':
